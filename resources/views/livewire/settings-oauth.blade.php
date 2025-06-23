@@ -26,10 +26,15 @@
                             label="Client ID" />
                         <x-forms.input id="oauth_settings_map.{{ $oauth_setting->provider }}.client_secret"
                             type="password" label="Client Secret" autocomplete="new-password" />
-                        <x-forms.input id="oauth_settings_map.{{ $oauth_setting->provider }}.redirect_uri"
+                        <x-forms.input id="oauth_settings_map.{{ $oauth_setting->provider }}.redirect_uri" placeholder="{{ route('auth.callback', $oauth_setting->provider) }}"
                             label="Redirect URI" />
                         @if ($oauth_setting->provider == 'azure')
                             <x-forms.input id="oauth_settings_map.{{ $oauth_setting->provider }}.tenant"
+                                label="Tenant" />
+                        @endif
+                        @if ($oauth_setting->provider == 'google')
+                            <x-forms.input id="oauth_settings_map.{{ $oauth_setting->provider }}.tenant"
+                                helper="Optional parameter that supplies a hosted domain (HD) to Google, which<br>triggers a login hint to be displayed on the OAuth screen with this domain.<br><br><a class='underline dark:text-warning text-coollabs' href='https://developers.google.com/identity/openid-connect/openid-connect#hd-param' target='_blank'>Google Documentation</a>"
                                 label="Tenant" />
                         @endif
                         @if ($oauth_setting->provider == 'authentik')

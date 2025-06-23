@@ -9,8 +9,10 @@ use App\Jobs\CleanupInstanceStuffsJob;
 use App\Jobs\DatabaseBackupJob;
 use App\Jobs\DockerCleanupJob;
 use App\Jobs\PullTemplatesFromCDN;
+use App\Jobs\RegenerateSslCertJob;
 use App\Jobs\ScheduledTaskJob;
 use App\Jobs\ServerCheckJob;
+use App\Jobs\ServerPatchCheckJob;
 use App\Jobs\ServerStorageCheckJob;
 use App\Jobs\UpdateCoolifyJob;
 use App\Models\InstanceSettings;
@@ -50,6 +52,7 @@ class Kernel extends ConsoleKernel
         }
 
         // $this->scheduleInstance->job(new CleanupStaleMultiplexedConnections)->hourly();
+        $this->scheduleInstance->command('cleanup:redis')->hourly();
 
         if (isDev()) {
             // Instance Jobs
@@ -82,6 +85,8 @@ class Kernel extends ConsoleKernel
 
             $this->checkScheduledBackups();
             $this->checkScheduledTasks();
+
+            $this->scheduleInstance->job(new RegenerateSslCertJob)->twiceDaily();
 
             $this->scheduleInstance->command('cleanup:database --yes')->daily();
             $this->scheduleInstance->command('uploads:clear')->everyTwoMinutes();
@@ -170,6 +175,9 @@ class Kernel extends ConsoleKernel
                     $dockerCleanupFrequency = VALID_CRON_STRINGS[$dockerCleanupFrequency];
                 }
                 $this->scheduleInstance->job(new DockerCleanupJob($server))->cron($dockerCleanupFrequency)->timezone($serverTimezone)->onOneServer();
+
+                // Server patch check - weekly
+                $this->scheduleInstance->job(new ServerPatchCheckJob($server))->weekly()->timezone($serverTimezone)->onOneServer();
 
                 // Cleanup multiplexed connections every hour
                 // $this->scheduleInstance->job(new ServerCleanupMux($server))->hourly()->onOneServer();
